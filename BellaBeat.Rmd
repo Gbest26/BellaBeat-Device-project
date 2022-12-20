@@ -1,0 +1,131 @@
+---
+title: "BellaBeat"
+author: "George.B"
+date: "2022-11-20"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# summary
+## 1.The Business Project
+* The task is to look out for trend on how people use the company smart devices and these insights can be     used by BellaBeat.
+
+### Working with Rstudio.
+Settings  the Rstudio and loading all necessary package to work with and then importing the BellaBeat dataset into my Rstudio.
+
+```{r}
+ library(tidyverse)
+ library(dplyr)
+ library(tidyr)
+ library(here)
+ library(ggplot2)
+ library(colorspace)
+ library(readr)
+```
+
+### importing the dataset.
+```{r}
+
+library(readr)
+dailyActivity_merged <- read_csv("C:/Users/pc/Desktop/Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
+View(dailyActivity_merged)
+sleepDay_merged <- read_csv("C:/Users/pc/Desktop/Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
+View(sleepDay_merged)
+weightLogInfo_merged <- read_csv("C:/Users/pc/Desktop/Fitabase Data 4.12.16-5.12.16/weightLogInfo_merged.csv")
+View(weightLogInfo_merged)
+```
+
+### Let do some quick summary check of the data columns.
+```{r}
+str(dailyActivity_merged)
+colnames(dailyActivity_merged)
+str(sleepDay_merged)
+colnames(sleepDay_merged)
+str(weightLogInfo_merged)
+colnames(weightLogInfo_merged)
+```
+
+### Descriptive Analyses will now beging.
+selecting and cleaning the data to wrangle.
+In these case i will be selecting some vital columns from thr dailyActivity_merge dataset to work with.
+```{r}
+dailyActivity_merged2 <- dailyActivity_merged %>% 
+  select(TotalDistance, VeryActiveDistance, ModeratelyActiveDistance, LightActiveDistance, Calories) %>% 
+  drop_na() %>% 
+  summarise(TotalDistance, VeryActiveDistance, ModeratelyActiveDistance, LightActiveDistance, Calories)
+```
+
+### visual representation
+```{r}
+dailyActive_merge_pattern <- dailyActivity_merged2 %>% 
+  group_by(TotalDistance, Calories) %>%
+  drop_na() %>% 
+  summarise(TotalDistance, Calories) %>% 
+  arrange(TotalDistance, Calories)
+ggplot(data=dailyActive_merge_pattern)+
+  geom_point(mapping=aes(x=TotalDistance, y=Calories, fill=Calories))+
+  geom_smooth(mapping=aes(x=TotalDistance, y=Calories, fill=Calories))
+```
+The graph about shows that the more distance covered by a user the more calories they burn out of their body, and the lesser distance covered the smaller the calories the user burn out of they body.
+
+### active records
+here i am analysing the very active distance covered by each user against the time they use in covering that distance.
+```{r}
+dailyActivity_merged_veryactive <- dailyActivity_merged %>% 
+  group_by(VeryActiveDistance, VeryActiveMinutes) %>% 
+  drop_na() %>% 
+  summarise(VeryActiveDistance, VeryActiveMinutes) %>% 
+  arrange(VeryActiveDistance, VeryActiveMinutes)
+ggplot(data=dailyActivity_merged_veryactive)+
+  geom_point(mapping=aes(x=VeryActiveDistance, y=VeryActiveMinutes))
+View(dailyActivity_merged_veryactive)
+View(dailyActivity_merged_veryactive)
+```
+
+### Sleepday analyses
+time to wrangle the second dataset on my workspace.
+firstly i want to select, sort and summarise the particular columns to analyse.
+```{r}
+sleepday_01 <- sleepDay_merged %>% 
+  separate(SleepDay, into = c('Date', 'Time'), sep= ' ')
+print(sleepday_01)
+```
+
+
+```{r}
+total_s_t <- sleepday_01%>% 
+  group_by(TotalSleepRecords, TotalMinutesAsleep, TotalTimeInBed) %>% 
+  drop_na() %>% 
+  summarise(TotalSleepRecords, TotalMinutesAsleep, TotalTimeInBed)
+print(total_s_t)
+```
+
+```{r}
+ggplot(data=sleepday_01)+
+  geom_smooth(mapping=aes(x=TotalTimeInBed, y=TotalSleepRecords, group=1, color='TotalMinutesAsleep'))+
+  geom_smooth(mapping=aes(x=TotalMinutesAsleep, y=TotalSleepRecords, group=2, color='TotalTimeInBed'))+
+  labs(title = "BellaBeat Device: SleepingTime Vs. SleepRecords", subtitle = "Sleeping Pattern")
+```
+From the above presenation i analyse and visualised the relationship totalminutesasleep and totaltimeinbed by plottin the totalsleeprecords. accord to the graphical represantation, user spend more time sleeping in bed.
+
+### weight analyses
+here i will be analysing the weight of the users against their body mass index(BMI)
+
+```{r}
+weightactivity <- weightLogInfo_merged %>%
+  select(WeightPounds, BMI, IsManualReport) %>% 
+  group_by(WeightPounds, BMI, IsManualReport) %>% 
+  drop_na() %>% 
+  summarise(WeightPounds, BMI, IsManualReport) %>% 
+  arrange(WeightPounds, BMI, IsManualReport)
+print(weightactivity)
+```
+
+```{r}
+ggplot(data=weightactivity)+
+  geom_smooth(mapping = aes(x=WeightPounds, y=BMI, linetype=IsManualReport))+
+  labs(title = "Bella Device: WeightPOunds Vs. BMI", subtitle = "Manual Report on Users")
+```
+this plot showcase a correlation between users weight and their body mass, The TRUE report conforms to the users weighting below 170pounds and having a body mass of less 30, While the FALSE report shows that user who weigh higher most surely have a higher body mass.
+
